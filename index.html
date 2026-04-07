@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Minifier - 代码压缩工具</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:-apple-system,'Segoe UI',sans-serif;background:#0f172a;color:#e2e8f0;min-height:100vh;}
+.app{max-width:900px;margin:0 auto;padding:20px;}
+.header{text-align:center;margin-bottom:20px;}
+.header h1{font-size:1.5em;} .header h1 span{color:#84cc16;}
+textarea{width:100%;min-height:200px;background:#1e293b;border:1px solid #334155;border-radius:8px;color:#e2e8f0;padding:12px;font-family:'Courier New',monospace;font-size:13px;resize:vertical;}
+textarea:focus{outline:none;border-color:#84cc16;}
+select{background:#1e293b;border:1px solid #334155;border-radius:8px;color:#e2e8f0;padding:10px 14px;margin-right:8px;}
+.btn{padding:12px 24px;background:#84cc16;color:#000;border:none;border-radius:8px;cursor:pointer;font-size:14px;font-weight:500;margin:8px 0;}
+.btn:hover{background:#65a30d;}
+.stats{display:flex;gap:16px;padding:12px;background:#1e293b;border-radius:8px;margin-top:8px;font-size:14px;}
+.stats span{color:#94a3b8;}
+.stats strong{color:#84cc16;}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="header"><h1>Code<span>Minifier</span></h1></div>
+  
+  <div style="background:#1e293b;border-radius:12px;padding:20px;margin-bottom:16px;">
+    <select id="lang"><option value="js">JavaScript</option><option value="css">CSS</option><option value="html">HTML</option><option value="json">JSON</option></select>
+    <button class="btn" onclick="minify()">压缩</button>
+  </div>
+  
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+    <div style="background:#1e293b;border-radius:12px;padding:20px;">
+      <h2 style="font-size:14px;color:#94a3b8;margin-bottom:12px">输入</h2>
+      <textarea id="input">function hello() {
+  var msg = "Hello World";
+  console.log(msg);
+}
+hello();</textarea>
+      <div class="stats"><span>原始: <strong id="origSize">0</strong>B</span></div>
+    </div>
+    <div style="background:#1e293b;border-radius:12px;padding:20px;">
+      <h2 style="font-size:14px;color:#94a3b8;margin-bottom:12px">输出</h2>
+      <textarea id="output" readonly></textarea>
+      <div class="stats"><span>压缩后: <strong id="minSize">0</strong>B</span><span>节省: <strong id="saved">0</strong>%</span><button class="btn" onclick="copy()" style="margin-left:auto;padding:8px 16px">复制</button></div>
+    </div>
+  </div>
+</div>
+
+<script>
+function minify() {
+  const lang = document.getElementById('lang').value;
+  const input = document.getElementById('input').value;
+  document.getElementById('origSize').textContent = new Blob([input]).size;
+  
+  let output;
+  try {
+    if (lang === 'js') {
+      output = input.replace(/\/\/.*|\/\*[\s\S]*?\*\//g, '').replace(/\s+/g, ' ').replace(/\s*([{};,:])\s*/g, '$1').trim();
+    } else if (lang === 'css') {
+      output = input.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\s+/g, ' ').replace(/\s*([{};:,>~+])\s*/g, '$1').replace(/;}/g, '}').trim();
+    } else if (lang === 'html') {
+      output = input.replace(/>\s+</g, '><').replace(/\s+/g, ' ').trim();
+    } else {
+      output = JSON.stringify(JSON.parse(input));
+    }
+  } catch(e) {
+    output = 'Error: ' + e.message;
+  }
+  
+  document.getElementById('output').value = output;
+  const minSize = new Blob([output]).size;
+  document.getElementById('minSize').textContent = minSize;
+  const origSize = parseInt(document.getElementById('origSize').textContent);
+  const saved = origSize > 0 ? Math.round((1 - minSize / origSize) * 100) : 0;
+  document.getElementById('saved').textContent = saved + '%';
+}
+
+function copy() {
+  navigator.clipboard.writeText(document.getElementById('output').value);
+}
+minify();
+</script>
+</body>
+</html>
